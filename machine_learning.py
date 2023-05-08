@@ -7,6 +7,7 @@ from sklearn.metrics import confusion_matrix, roc_curve, auc, accuracy_score
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.utils.multiclass import type_of_target
 import keras
 from keras.models import Sequential
@@ -19,9 +20,7 @@ import tensorflow as tf
 from keras.preprocessing.text import Tokenizer
 import matplotlib.pyplot as plt
 from plot_keras_history import show_history, plot_history
-import torch
-from transformers import BertTokenizer, BertForSequenceClassification
-
+from transformers import BertTokenizer, BertForSequenceClassification, pipeline
 
 max_words = 5000
 max_len = 200
@@ -49,6 +48,7 @@ def main():
 
     # ETAP 2: CLASSIC ML
     # show_plot(X_train, X_test, y_train, y_test)
+    show_plot(X_train, X_test, y_train, y_test)
 
     # ETAP 3: NEURAL MODEL
     # fine_tune(X_train, X_test, y_train, y_test)
@@ -56,6 +56,23 @@ def main():
     best_model = keras.models.load_model('best_model.h5')
     test_loss, test_acc = best_model.evaluate(X_test, y_test)
     print('Test accuracy:', test_acc)
+
+    # ETAP 4: LANGUAGE MODEL
+    finbert = BertForSequenceClassification.from_pretrained(
+        'yiyanghkust/finbert-tone', num_labels=3)
+    tokenizer = BertTokenizer.from_pretrained('yiyanghkust/finbert-tone')
+
+    sentences = ['idk man sounds like brainwashed fanatic',
+                 'there is a shortage of capital, and we need extra financing.',
+                 'formulation patents might protect Vasotec to a limited extent.']
+
+    nlp = pipeline('text-classification',
+                   model=finbert,
+                   tokenizer=tokenizer)
+
+    results = nlp(sentences)
+    # What next??
+    print(results)
 
 
 def fine_tune(X_train, X_test, y_train, y_test):
@@ -78,13 +95,6 @@ def fine_tune(X_train, X_test, y_train, y_test):
     plot_history(best_history)
     plt.close()
 
-    # history = model.fit(X_train, y_train, epochs=10,
-    #                       validation_data=(X_test, y_test))
-    # print(history3)
-    # show_history(history3)
-    # plot_history(history3)
-    # plt.close()
-
 
 def modelPlot():
     models = Sequential()
@@ -102,10 +112,10 @@ def modelPlot():
 
     return models
 
+
+# ETAP 2: CLASSIC ML
 # Choose 3 models to fit data and present the results with
 # confusion matric and roc curve.
-
-
 def show_plot(X_train, X_test, y_train, y_test):
     # vectorize comments using tf-idf
     vectorizer = TfidfVectorizer(max_features=500000, ngram_range=(1, 2))
