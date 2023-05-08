@@ -8,6 +8,23 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.utils.multiclass import type_of_target
+import keras
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.metrics import categorical_crossentropy
+from keras.optimizers import Adam
+from keras.utils import pad_sequences, to_categorical
+from keras import layers
+import tensorflow as tf
+from keras.preprocessing.text import Tokenizer
+import matplotlib.pyplot as plt
+from plot_keras_history import show_history, plot_history
+import torch
+from transformers import BertTokenizer, BertForSequenceClassification
+
+
+max_words = 5000
+max_len = 200
 
 
 def main():
@@ -18,24 +35,84 @@ def main():
     data['comment'] = data['comment'].astype('string')
     data['label'] = data['label'].astype('int')
     print(data.info())
+    print(data.sample(5))
 
     # split data into training and testing sets
+    tokenizer = Tokenizer(num_words=5000)
+    tokenizer.fit_on_texts(data.comment)
+    sequences = tokenizer.texts_to_sequences(data.comment)
+    war = pad_sequences(sequences, maxlen=200)
 
+    labels = to_categorical(data['label'], num_classes=3)
     X_train, X_test, y_train, y_test = train_test_split(
-        data['comment'], data['label'], test_size=0.1)
+        war, labels, test_size=0.1, stratify=labels, random_state=42)
 
+    # ETAP 2: CLASSIC ML
+    # show_plot(X_train, X_test, y_train, y_test)
+
+    # ETAP 3: NEURAL MODEL
+    # fine_tune(X_train, X_test, y_train, y_test)
+
+    best_model = keras.models.load_model('best_model.h5')
+    test_loss, test_acc = best_model.evaluate(X_test, y_test)
+    print('Test accuracy:', test_acc)
+
+
+def fine_tune(X_train, X_test, y_train, y_test):
+    best_val_loss = float('inf')
+    best_model = None
+    best_history = None
+
+    for epoch in range(10):
+        model = modelPlot()
+        history = model.fit(X_train, y_train, epochs=10,
+                            validation_data=(X_test, y_test))
+        val_loss = model.evaluate(X_test, y_test)[0]
+
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+            best_model = model
+            best_history = history
+            best_model.save('best_model.h5')
+    show_history(best_history)
+    plot_history(best_history)
+    plt.close()
+
+    # history = model.fit(X_train, y_train, epochs=10,
+    #                       validation_data=(X_test, y_test))
+    # print(history3)
+    # show_history(history3)
+    # plot_history(history3)
+    # plt.close()
+
+
+def modelPlot():
+    models = Sequential()
+
+    models.add(layers.Embedding(max_words, 40, input_length=max_len))
+    models.add(layers.Conv1D(20, 6, activation='relu'))
+    models.add(layers.MaxPooling1D(5))
+    models.add(layers.Conv1D(20, 6, activation='relu'))
+    models.add(layers.GlobalMaxPooling1D())
+    models.add(layers.Dense(3, activation='softmax'))
+
+    models.compile(optimizer='rmsprop',
+                   loss='categorical_crossentropy',
+                   metrics=['accuracy'])
+
+    return models
+
+# Choose 3 models to fit data and present the results with
+# confusion matric and roc curve.
+
+
+def show_plot(X_train, X_test, y_train, y_test):
     # vectorize comments using tf-idf
     vectorizer = TfidfVectorizer(max_features=500000, ngram_range=(1, 2))
     print(X_train)
     X_train = vectorizer.fit_transform(X_train)
     X_test = vectorizer.transform(X_test)
 
-    show_plot(X_train, X_test, y_train, y_test)
-
-
-# Choose 3 models to fit data and present the results with
-# confusion matric and roc curve.
-def show_plot(X_train, X_test, y_train, y_test):
     models = [
         ('Multinomial Naive Bayes', MultinomialNB()),
         ('Logistic Regression', LogisticRegression()),
@@ -46,15 +123,15 @@ def show_plot(X_train, X_test, y_train, y_test):
         model.fit(X_train, y_train)
         y_pred = model.predict(X_test)
         cm = confusion_matrix(y_test, y_pred)
-        # fpr, tpr, thresholds = roc_curve(y_test, y_pred)
-        # roc_auc = auc(fpr, tpr)
+        fpr, tpr, thresholds = roc_curve(y_test, y_pred)
+        roc_auc = auc(fpr, tpr)
 
         print(name)
         print('Confusion Matrix:\n', cm)
-        # print('ROC AUC:', roc_auc)
+        print('ROC AUC:', roc_auc)
 
         plt.figure()
-        # plt.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve')
+        plt.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve')
         plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
         plt.xlim([0.0, 1.0])
         plt.ylim([0.0, 1.05])
