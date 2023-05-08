@@ -48,7 +48,7 @@ def main():
 
     # ETAP 2: CLASSIC ML
     # show_plot(X_train, X_test, y_train, y_test)
-    show_plot(X_train, X_test, y_train, y_test)
+    # show_plot(X_train, X_test, y_train, y_test)
 
     # ETAP 3: NEURAL MODEL
     # fine_tune(X_train, X_test, y_train, y_test)
