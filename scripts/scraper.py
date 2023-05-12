@@ -13,7 +13,7 @@ nltk.download('stopwords')
 nltk.download('punkt')
 
 # a. Select the number of target classes (2 or 3 if we include neutral).
-num_classes = 3
+num_classes = 2
 # b. Clean data and remove stopwords
 stop_words = set(stopwords.words('english'))
 

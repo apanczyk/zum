@@ -3,24 +3,22 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics import confusion_matrix, roc_curve, auc, accuracy_score
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.utils.multiclass import type_of_target
 import keras
 from keras.models import Sequential
-from keras.layers import Dense
-from keras.metrics import categorical_crossentropy
-from keras.optimizers import Adam
 from keras.utils import pad_sequences, to_categorical
 from keras import layers
-import tensorflow as tf
 from keras.preprocessing.text import Tokenizer
 import matplotlib.pyplot as plt
 from plot_keras_history import show_history, plot_history
 from transformers import BertTokenizer, BertForSequenceClassification, pipeline
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import confusion_matrix, roc_curve, auc
 
 max_words = 5000
 max_len = 200
@@ -43,11 +41,12 @@ def main():
     war = pad_sequences(sequences, maxlen=200)
 
     labels = to_categorical(data['label'], num_classes=3)
+
     X_train, X_test, y_train, y_test = train_test_split(
         war, labels, test_size=0.1, stratify=labels, random_state=42)
 
     # ETAP 2: CLASSIC ML
-    show_plot(X_train, X_test, y_train, y_test)
+    show_plot(data)
 
     # ETAP 3: NEURAL MODEL
     fine_tune(X_train, X_test, y_train, y_test)
@@ -115,12 +114,14 @@ def modelPlot():
 # ETAP 2: CLASSIC ML
 # Choose 3 models to fit data and present the results with
 # confusion matric and roc curve.
-def show_plot(X_train, X_test, y_train, y_test):
-    # vectorize comments using tf-idf
-    vectorizer = TfidfVectorizer(max_features=500000, ngram_range=(1, 2))
-    print(X_train.shape)
-    X_train = vectorizer.fit_transform(X_train.flatten())
-    X_test = vectorizer.transform(X_test)
+def show_plot(data):
+    # Split the data into training and testing sets
+    X_train, X_test, y_train, y_test = train_test_split(
+        data['comment'], data['label'], test_size=0.3, random_state=42)
+
+    tfidf = TfidfVectorizer(max_features=500000, ngram_range=(1, 2))
+    X_train = tfidf.fit_transform(X_train)
+    X_test = tfidf.transform(X_test)
 
     models = [
         ('Multinomial Naive Bayes', MultinomialNB()),
