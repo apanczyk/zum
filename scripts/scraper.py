@@ -21,7 +21,7 @@ stop_words = set(stopwords.words('english'))
 def main():
     # scrape_reddit('war', 20000)
 
-    df = pd.read_csv("war.csv")
+    df = pd.read_csv("./data/war.csv")
 
     # b. Clean data and remove stopwords
     df = df.drop(columns=['title'])
@@ -46,7 +46,7 @@ def main():
     df['label'] = kmeans.labels_
 
     print(df.head())
-    df.to_csv('result.csv', index=False)
+    df.to_csv('./data/result.csv', index=False)
 
 
 # Scrapping reddit in r/war
@@ -79,9 +79,8 @@ def scrape_reddit(subreddit, limit):
     df = pd.DataFrame(posts, columns=['title', 'comment'])
     df.to_csv(f'{subreddit}.csv', index=False)
 
+
 # b. Clean data and remove stopwords
-
-
 def clean_text(text):
     text = str(text)
     text = re.sub(r'\W+', ' ', text)

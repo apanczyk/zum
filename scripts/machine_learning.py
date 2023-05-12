@@ -28,7 +28,7 @@ max_len = 200
 
 def main():
     # load data into a pandas DataFrame
-    data = pd.read_csv('result.csv', sep=',')
+    data = pd.read_csv('./data/result.csv', sep=',')
 
     check_nan(data)
     data['comment'] = data['comment'].astype('string')
@@ -47,13 +47,12 @@ def main():
         war, labels, test_size=0.1, stratify=labels, random_state=42)
 
     # ETAP 2: CLASSIC ML
-    # show_plot(X_train, X_test, y_train, y_test)
-    # show_plot(X_train, X_test, y_train, y_test)
+    show_plot(X_train, X_test, y_train, y_test)
 
     # ETAP 3: NEURAL MODEL
-    # fine_tune(X_train, X_test, y_train, y_test)
+    fine_tune(X_train, X_test, y_train, y_test)
 
-    best_model = keras.models.load_model('best_model.h5')
+    best_model = keras.models.load_model('./results/best_model.h5')
     test_loss, test_acc = best_model.evaluate(X_test, y_test)
     print('Test accuracy:', test_acc)
 
@@ -90,7 +89,7 @@ def fine_tune(X_train, X_test, y_train, y_test):
             best_val_loss = val_loss
             best_model = model
             best_history = history
-            best_model.save('best_model.h5')
+            best_model.save('./results/best_model.h5')
     show_history(best_history)
     plot_history(best_history)
     plt.close()
@@ -119,8 +118,8 @@ def modelPlot():
 def show_plot(X_train, X_test, y_train, y_test):
     # vectorize comments using tf-idf
     vectorizer = TfidfVectorizer(max_features=500000, ngram_range=(1, 2))
-    print(X_train)
-    X_train = vectorizer.fit_transform(X_train)
+    print(X_train.shape)
+    X_train = vectorizer.fit_transform(X_train.flatten())
     X_test = vectorizer.transform(X_test)
 
     models = [
